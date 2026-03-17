@@ -103,7 +103,7 @@ describe("ImageBodyView", () => {
             },
         ) as ImageBodyViewModel;
 
-        render(<ImageBodyView vm={vm} className="mx_MImageBody" />);
+        render(<ImageBodyView vm={vm} className="custom-image-body" />);
 
         const link = screen.getByRole("link");
         const image = screen.getByRole("img", { name: "A scenic mountain lake" });
@@ -137,7 +137,7 @@ describe("ImageBodyView", () => {
             { onRevealMedia },
         ) as ImageBodyViewModel;
 
-        render(<ImageBodyView vm={hiddenVm} className="mx_MImageBody" />);
+        render(<ImageBodyView vm={hiddenVm} className="custom-image-body" />);
         await user.click(screen.getByRole("button", { name: "Show image" }));
 
         expect(onRevealMedia).toHaveBeenCalledTimes(1);
@@ -150,8 +150,8 @@ describe("ImageBodyView", () => {
             errorLabel: "Error loading image",
         }) as ImageBodyViewModel;
 
-        const { container } = render(<ImageBodyView vm={vm} className="mx_MImageBody custom-class" />);
+        const { container } = render(<ImageBodyView vm={vm} className="custom-image-body custom-class" />);
 
-        expect(container.firstChild).toHaveClass("mx_MImageBody", "custom-class");
+        expect(container.firstChild).toHaveClass("custom-image-body", "custom-class");
     });
 });

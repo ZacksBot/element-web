@@ -3,14 +3,14 @@
 exports[`ImageBodyView > renders the default image state 1`] = `
 <div>
   <div
-    class="root mx_MImageBody"
+    class="root"
   >
     <a
       class="interactiveWrapper"
       href="https://example.com/image.png"
     >
       <div
-        class="mx_MImageBody_thumbnail_container thumbnailContainer"
+        class="thumbnailContainer"
         style="max-height: 180px; max-width: 320px; aspect-ratio: 16 / 9;"
       >
         <div
@@ -18,7 +18,7 @@ exports[`ImageBodyView > renders the default image state 1`] = `
         >
           <img
             alt="A scenic mountain lake"
-            class="mx_MImageBody_thumbnail thumbnail"
+            class="thumbnail"
             src="data:image/svg+xml;utf8,%0A%20%20%20%20%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22180%22%20viewBox%3D%220%200%20320%20180%22%3E%0A%20%20%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23b3d4ff%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f7c7ff%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%20%20%3Crect%20width%3D%22320%22%20height%3D%22180%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%20%20%20%20%20%20%3Ccircle%20cx%3D%2282%22%20cy%3D%2282%22%20r%3D%2234%22%20fill%3D%22%23fff6%22%2F%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M30%20150%20L130%2088%20L190%20138%20L240%20102%20L320%20180%20L0%20180%20Z%22%20fill%3D%22%231f3a5f%22%2F%3E%0A%20%20%20%20%3C%2Fsvg%3E%0A"
           />
         </div>
@@ -31,13 +31,13 @@ exports[`ImageBodyView > renders the default image state 1`] = `
 exports[`ImageBodyView > renders the error state 1`] = `
 <div>
   <div
-    class="root mx_MImageBody"
+    class="root"
   >
     <span
       class="error"
     >
       <svg
-        class="mx_MediaProcessingError_Icon errorIcon"
+        class="errorIcon"
         fill="currentColor"
         height="1em"
         viewBox="0 0 24 24"
@@ -62,10 +62,10 @@ exports[`ImageBodyView > renders the error state 1`] = `
 exports[`ImageBodyView > renders the hidden-media state 1`] = `
 <div>
   <div
-    class="root mx_MImageBody"
+    class="root"
   >
     <div
-      class="mx_MImageBody_thumbnail_container thumbnailContainer"
+      class="thumbnailContainer"
       style="max-height: 180px; max-width: 320px; aspect-ratio: 16 / 9;"
     >
       <div
@@ -75,7 +75,7 @@ exports[`ImageBodyView > renders the hidden-media state 1`] = `
           style="width: 320px; height: 180px;"
         >
           <button
-            class="mx_HiddenMediaPlaceholder hiddenMediaPlaceholder"
+            class="hiddenMediaPlaceholder"
             type="button"
           >
             <span
@@ -107,21 +107,20 @@ exports[`ImageBodyView > renders the hidden-media state 1`] = `
 exports[`ImageBodyView > renders the loading blurhash state 1`] = `
 <div>
   <div
-    class="root mx_MImageBody"
+    class="root"
   >
     <a
       class="interactiveWrapper"
       href="https://example.com/image.png"
     >
       <div
-        class="mx_MImageBody_thumbnail_container thumbnailContainer"
+        class="thumbnailContainer"
         style="max-height: 180px; max-width: 320px; aspect-ratio: 16 / 9;"
       >
         <div
-          class="mx_MImageBody_placeholder placeholder placeholderBlurhash"
+          class="placeholder placeholderBlurhash"
         >
           <div
-            class="mx_Blurhash"
             style="display: inline-block; height: 180px; width: 320px; position: relative;"
           >
             <canvas
@@ -136,11 +135,11 @@ exports[`ImageBodyView > renders the loading blurhash state 1`] = `
         >
           <img
             alt="A scenic mountain lake"
-            class="mx_MImageBody_thumbnail thumbnail"
+            class="thumbnail"
             src="data:image/svg+xml;utf8,%0A%20%20%20%20%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22180%22%20viewBox%3D%220%200%20320%20180%22%3E%0A%20%20%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23b3d4ff%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23f7c7ff%22%2F%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%20%20%3Crect%20width%3D%22320%22%20height%3D%22180%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%20%20%20%20%20%20%3Ccircle%20cx%3D%2282%22%20cy%3D%2282%22%20r%3D%2234%22%20fill%3D%22%23fff6%22%2F%3E%0A%20%20%20%20%20%20%20%20%3Cpath%20d%3D%22M30%20150%20L130%2088%20L190%20138%20L240%20102%20L320%20180%20L0%20180%20Z%22%20fill%3D%22%231f3a5f%22%2F%3E%0A%20%20%20%20%3C%2Fsvg%3E%0A"
           />
           <span
-            class="mx_MImageBody_banner banner"
+            class="banner"
           >
             sunset-over-the-lake.png
           </span>

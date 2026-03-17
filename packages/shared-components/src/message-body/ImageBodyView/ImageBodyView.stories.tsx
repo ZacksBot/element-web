@@ -63,7 +63,6 @@ const meta = {
     component: ImageBodyViewStoryWrapper,
     tags: ["autodocs"],
     args: {
-        className: "mx_MImageBody",
         state: ImageBodyViewState.READY,
         altText: "A scenic mountain lake",
         wrapper: ImageBodyViewWrapper.LINK,
@@ -116,9 +115,7 @@ export const AnimatedImage: Story = {
 
 export const StickerWithTooltip: Story = {
     args: {
-        className: "mx_MImageBody",
         wrapper: ImageBodyViewWrapper.DIV,
-        wrapperClassName: "mx_MStickerBody_wrapper",
         tooltip: "Party parrot",
         banner: undefined,
     },

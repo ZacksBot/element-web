@@ -224,7 +224,7 @@ function renderPlaceholder(
     }
 
     if (placeholder === ImageBodyViewPlaceholder.BLURHASH && blurhash && maxWidth && maxHeight) {
-        return <Blurhash className="mx_Blurhash" hash={blurhash} width={maxWidth} height={maxHeight} />;
+        return <Blurhash hash={blurhash} width={maxWidth} height={maxHeight} />;
     }
 
     return <InlineSpinner aria-label={placeholderAriaLabel ?? "Loading"} role="progressbar" />;
@@ -235,11 +235,7 @@ function renderHiddenMediaButton(
     onRevealMedia: MouseEventHandler<HTMLButtonElement> | undefined,
 ): JSX.Element {
     return (
-        <button
-            type="button"
-            className={classNames("mx_HiddenMediaPlaceholder", styles.hiddenMediaPlaceholder)}
-            onClick={onRevealMedia}
-        >
+        <button type="button" className={styles.hiddenMediaPlaceholder} onClick={onRevealMedia}>
             <span className={styles.hiddenMediaPlaceholderContent}>
                 <VisibilityOnIcon />
                 <span>{label}</span>
@@ -337,7 +333,7 @@ export function ImageBodyView({ vm, className, children, imageRef }: Readonly<Im
     if (state === ImageBodyViewState.ERROR) {
         media = (
             <span className={styles.error}>
-                <ImageErrorIcon className={classNames("mx_MediaProcessingError_Icon", styles.errorIcon)} />
+                <ImageErrorIcon className={styles.errorIcon} />
                 <span>{errorLabel}</span>
             </span>
         );
@@ -359,14 +355,14 @@ export function ImageBodyView({ vm, className, children, imageRef }: Readonly<Im
     } else {
         const placeholderContent = renderPlaceholder(placeholder, blurhash, maxWidth, maxHeight, placeholderAriaLabel);
         const placeholderNode = showPlaceholder && placeholderContent ? (
-                <div
-                    className={classNames("mx_MImageBody_placeholder", styles.placeholder, {
-                        [styles.placeholderBlurhash]: placeholder === ImageBodyViewPlaceholder.BLURHASH,
-                    })}
-                >
-                    {placeholderContent}
-                </div>
-            ) : null;
+            <div
+                className={classNames(styles.placeholder, {
+                    [styles.placeholderBlurhash]: placeholder === ImageBodyViewPlaceholder.BLURHASH,
+                })}
+            >
+                {placeholderContent}
+            </div>
+        ) : null;
 
         const imageNode = showHiddenMediaPlaceholder ? (
             <div style={{ width: maxWidth, height: maxHeight }}>
@@ -375,7 +371,7 @@ export function ImageBodyView({ vm, className, children, imageRef }: Readonly<Im
         ) : imageSrc ? (
             <img
                 ref={imageRef}
-                className={classNames("mx_MImageBody_thumbnail", styles.thumbnail)}
+                className={styles.thumbnail}
                 src={imageSrc}
                 alt={altText}
                 onError={vm.onImageError}
@@ -387,7 +383,7 @@ export function ImageBodyView({ vm, className, children, imageRef }: Readonly<Im
 
         let thumbnail = (
             <div
-                className={classNames("mx_MImageBody_thumbnail_container", styles.thumbnailContainer)}
+                className={styles.thumbnailContainer}
                 style={containerStyle}
                 tabIndex={tooltip ? 0 : undefined}
             >
@@ -395,8 +391,8 @@ export function ImageBodyView({ vm, className, children, imageRef }: Readonly<Im
 
                 <div style={imageBoxStyle}>
                     {imageNode}
-                    {showGifLabel && <p className={classNames("mx_MImageBody_gifLabel", styles.gifLabel)}>{gifLabel}</p>}
-                    {banner && <span className={classNames("mx_MImageBody_banner", styles.banner)}>{banner}</span>}
+                    {showGifLabel && <p className={styles.gifLabel}>{gifLabel}</p>}
+                    {banner && <span className={styles.banner}>{banner}</span>}
                 </div>
 
                 {showLoadingSpacer && !placeholderNode && (
