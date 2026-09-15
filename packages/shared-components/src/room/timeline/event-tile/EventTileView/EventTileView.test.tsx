@@ -18,6 +18,9 @@ import {
     type EventTileViewRootState,
 } from "./index";
 import styles from "./EventTileView.module.css";
+import { MockViewModel } from "../../../../core/viewmodel";
+import { ReactionsRowView, type ReactionsRowViewSnapshot } from "../reactions/ReactionsRow";
+import callTileStyles from "../call/tombstone/common.module.css";
 
 const renderState: EventTileViewProps["root"] = {
     id: "event-line-1",
@@ -351,6 +354,31 @@ describe("EventTileView", () => {
             }
         },
     );
+
+    it("does not replace an RTC call tile's own Bubble-layout padding", () => {
+        const { getByTestId } = render(
+            <EventTileView
+                {...createProps({
+                    root: {
+                        ...renderState,
+                        state: {
+                            ...renderState.state,
+                            leftAlignedBubble: true,
+                            alignedBetweenBubbles: true,
+                        },
+                    },
+                    slots: {
+                        body: <div data-testid="call-tile" className={callTileStyles.container} />,
+                    },
+                })}
+            />,
+            { presentation: { layout: "bubble" } },
+        );
+
+        const callTile = getByTestId("call-tile");
+        expect(getComputedStyle(callTile).paddingLeft).toBe("12px");
+        expect(getComputedStyle(callTile).paddingRight).toBe("12px");
+    });
 
     it("preserves the application styling contract across rendering modes", () => {
         const group = render(
@@ -727,5 +755,45 @@ describe("EventTileView", () => {
 
         expect(container.firstElementChild?.tagName).toBe("ARTICLE");
         expect(rootRef.current).toBe(container.firstElementChild);
+    });
+});
+
+describe("EventTileView bubble layout reactions", () => {
+    const reactionsSnapshot: ReactionsRowViewSnapshot = {
+        ariaLabel: "Reactions",
+        isVisible: true,
+        showAddReactionButton: true,
+        addReactionButtonLabel: "Add reaction",
+        addReactionButtonVisible: true,
+    };
+
+    const renderAddReactionButton = (isOwnEvent: boolean): HTMLElement => {
+        const vm = new MockViewModel<ReactionsRowViewSnapshot>(reactionsSnapshot);
+        const { getByRole } = render(
+            <EventTileView
+                {...createProps({
+                    root: { ...renderState, state: { ...renderState.state, hasReply: false, isOwnEvent } },
+                    slots: {
+                        body: <span data-testid="body">Body</span>,
+                        footer: (
+                            <ReactionsRowView vm={vm}>
+                                <button type="button">Reaction</button>
+                            </ReactionsRowView>
+                        ),
+                    },
+                })}
+            />,
+            { presentation: { layout: "bubble" } },
+        );
+
+        return getByRole("button", { name: "Add reaction" });
+    };
+
+    it("moves the add-reaction control ahead of the reactions in an own-message bubble", () => {
+        expect(getComputedStyle(renderAddReactionButton(true)).order).toBe("-1");
+    });
+
+    it("keeps the add-reaction control after the reactions in another user's bubble", () => {
+        expect(getComputedStyle(renderAddReactionButton(false)).order).toBe("0");
     });
 });
