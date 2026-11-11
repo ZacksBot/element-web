@@ -4,14 +4,16 @@ Copyright 2025 Element Creations Ltd.
 SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Commercial
 Please see LICENSE files in the repository root for full details.
 */
-import {
-    type StoresApi as IStoresApi,
-    type RoomListStoreApi as IRoomListStore,
-    type Room,
-    Watchable,
+import type {
+    StoresApi as IStoresApi,
+    RoomListStoreApi as IRoomListStore,
+    Room,
 } from "@element-hq/element-web-module-api";
+import { Watchable } from "@element-hq/element-web-module-api";
+import type { Room as SdkRoom } from "matrix-js-sdk/src/matrix";
 
 import type { RoomListStoreV3Class, RoomListStoreV3Event } from "../stores/room-list-v3/RoomListStoreV3";
+import type { ClientSession } from "./ClientSession";
 import { Room as ModuleRoom } from "./models/Room";
 
 interface RlsEvents {
@@ -21,11 +23,12 @@ interface RlsEvents {
 
 export class RoomListStoreApi implements IRoomListStore {
     private rls?: RoomListStoreV3Class;
+    private roomsWatchable?: RoomsWatchable;
     private LISTS_LOADED_EVENT?: RoomListStoreV3Event.ListsLoaded;
     private LISTS_UPDATE_EVENT?: RoomListStoreV3Event.ListsUpdate;
     public readonly moduleLoadPromise: Promise<void>;
 
-    public constructor() {
+    public constructor(private readonly session: ClientSession) {
         this.moduleLoadPromise = this.init();
     }
 
@@ -41,7 +44,8 @@ export class RoomListStoreApi implements IRoomListStore {
     }
 
     public getRooms(): RoomsWatchable {
-        return new RoomsWatchable(this.roomListStore, this.events);
+        this.roomsWatchable ??= new RoomsWatchable(this.roomListStore, this.events, this.session);
+        return this.roomsWatchable;
     }
 
     private get events(): RlsEvents {
@@ -74,16 +78,41 @@ export class RoomListStoreApi implements IRoomListStore {
 }
 
 class RoomsWatchable extends Watchable<Room[]> {
+    private readonly rooms = new Map<SdkRoom, ModuleRoom>();
+
     public constructor(
         private readonly rls: RoomListStoreV3Class,
         private readonly events: RlsEvents,
+        private readonly session: ClientSession,
     ) {
-        super(rls.getSortedRooms().map((sdkRoom) => new ModuleRoom(sdkRoom)));
+        super([]);
+        this.refresh();
+        session.onClientChange(this.onClientChange);
     }
 
     private onRlsUpdate = (): void => {
-        this.value = this.rls.getSortedRooms().map((sdkRoom) => new ModuleRoom(sdkRoom));
+        this.refresh();
     };
+
+    private onClientChange = (): void => {
+        this.rooms.clear();
+        this.value = [];
+    };
+
+    private refresh(): void {
+        if (!this.session.currentClient) return;
+        this.value = this.rls
+            .getSortedRooms()
+            .filter((sdkRoom) => sdkRoom.client === this.session.currentClient)
+            .map((sdkRoom) => {
+                let room = this.rooms.get(sdkRoom);
+                if (!room) {
+                    room = new ModuleRoom(this.session, sdkRoom);
+                    this.rooms.set(sdkRoom, room);
+                }
+                return room;
+            });
+    }
 
     protected onFirstWatch(): void {
         this.rls.on(this.events.LISTS_UPDATE_EVENT, this.onRlsUpdate);
@@ -97,9 +126,11 @@ class RoomsWatchable extends Watchable<Room[]> {
 export class StoresApi implements IStoresApi {
     private roomListStoreApi?: IRoomListStore;
 
+    public constructor(private readonly session: ClientSession) {}
+
     public get roomListStore(): IRoomListStore {
         if (!this.roomListStoreApi) {
-            this.roomListStoreApi = new RoomListStoreApi();
+            this.roomListStoreApi = new RoomListStoreApi(this.session);
         }
         return this.roomListStoreApi;
     }

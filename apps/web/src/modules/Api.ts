@@ -18,6 +18,7 @@ import { overwriteAccountAuth } from "./Auth.ts";
 import { ElementWebExtrasApi } from "./ExtrasApi.ts";
 import { ElementWebBuiltinsApi } from "./BuiltinsApi.tsx";
 import { ClientApi } from "./ClientApi.ts";
+import { ClientSession } from "./ClientSession.ts";
 import { StoresApi } from "./StoresApi.ts";
 import { WidgetLifecycleApi } from "./WidgetLifecycleApi.ts";
 import { WidgetApi } from "./WidgetApi.ts";
@@ -46,10 +47,11 @@ export class ModuleApi implements Api {
         return ModuleApi._instance;
     }
 
+    private readonly clientSession = new ClientSession(defaultDispatcher);
     public readonly navigation = new NavigationApi();
     public readonly openDialog = openDialog;
     public readonly overwriteAccountAuth = overwriteAccountAuth;
-    public readonly profile = new WatchableProfile();
+    public readonly profile = new WatchableProfile(this.clientSession);
 
     public readonly config = new ConfigApi();
     public readonly i18n = new I18nApi();
@@ -60,10 +62,10 @@ export class ModuleApi implements Api {
     public readonly widgetLifecycle = new WidgetLifecycleApi();
     public readonly widget = new WidgetApi();
     public readonly rootNode = document.getElementById("matrixchat")!;
-    public readonly client = new ClientApi(defaultDispatcher);
+    public readonly client = new ClientApi(defaultDispatcher, this.clientSession);
     // Element Desktop exposes this on the preload; on the web it is undefined and modules see no X.509 support.
     public readonly x509 = window.electron?.x509;
-    public readonly stores = new StoresApi();
+    public readonly stores = new StoresApi(this.clientSession);
     public readonly composer = new ComposerApi(defaultDispatcher);
     public readonly storageHelper = new StorageHelperApi();
     public readonly settings = new SettingsApi();

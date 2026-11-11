@@ -5,17 +5,22 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import { type Room as IRoom, Watchable } from "@element-hq/element-web-module-api";
+import type { Room as IRoom } from "@element-hq/element-web-module-api";
 import { EventType, type MatrixEvent, RoomEvent, RoomStateEvent, type Room as SdkRoom } from "matrix-js-sdk/src/matrix";
 import { logger } from "matrix-js-sdk/src/logger";
 
-export class Room implements IRoom {
-    public name: Watchable<string>;
-    public isEncrypted: Watchable<boolean | undefined>;
+import type { ClientSession } from "../ClientSession";
+import { SessionWatchable } from "../SessionWatchable";
 
-    public constructor(private sdkRoom: SdkRoom) {
-        this.name = new WatchableName(sdkRoom);
-        this.isEncrypted = new WatchableIsEncrypted(sdkRoom);
+export class Room implements IRoom {
+    public name: WatchableName;
+    public isEncrypted: WatchableIsEncrypted;
+    public constructor(
+        session: ClientSession,
+        private sdkRoom: SdkRoom,
+    ) {
+        this.name = new WatchableName(session, sdkRoom);
+        this.isEncrypted = new WatchableIsEncrypted(session, sdkRoom);
     }
 
     public getLastActiveTimestamp(): number {
@@ -30,19 +35,23 @@ export class Room implements IRoom {
 /**
  * A custom watchable for room name.
  */
-class WatchableName extends Watchable<string> {
-    public constructor(private sdkRoom: SdkRoom) {
-        super(sdkRoom.name);
+class WatchableName extends SessionWatchable<string> {
+    public constructor(
+        session: ClientSession,
+        private sdkRoom: SdkRoom,
+    ) {
+        super(session, sdkRoom.name, "");
     }
 
     private onNameUpdate = (): void => {
-        super.value = this.sdkRoom.name;
+        this.publish(this.sdkRoom.name);
     };
-    protected onFirstWatch(): void {
+
+    protected attachSource(): void {
         this.sdkRoom.on(RoomEvent.Name, this.onNameUpdate);
     }
 
-    protected onLastWatch(): void {
+    protected detachSource(): void {
         this.sdkRoom.off(RoomEvent.Name, this.onNameUpdate);
     }
 }
@@ -53,22 +62,25 @@ class WatchableName extends Watchable<string> {
  * encryption state event changes. The method to check is async, so it return undefined until
  * the method returns.
  */
-class WatchableIsEncrypted extends Watchable<boolean | undefined> {
+class WatchableIsEncrypted extends SessionWatchable<boolean | undefined> {
     // Incremented on every check so that a slow, stale result can't overwrite a newer one.
     private checkId = 0;
-
-    public constructor(private sdkRoom: SdkRoom) {
-        super(undefined);
+    public constructor(
+        session: ClientSession,
+        private sdkRoom: SdkRoom,
+    ) {
+        super(session, undefined, undefined);
         void this.updateIsEncrypted();
     }
 
     private async updateIsEncrypted(): Promise<void> {
+        if (!this.isActive) return;
         const checkId = ++this.checkId;
         try {
             const isEncrypted = Boolean(
                 await this.sdkRoom.client.getCrypto()?.isEncryptionEnabledInRoom(this.sdkRoom.roomId),
             );
-            if (checkId === this.checkId) super.value = isEncrypted;
+            if (checkId === this.checkId) this.publish(isEncrypted);
         } catch (e) {
             logger.error(`Failed to check whether room ${this.sdkRoom.roomId} is encrypted`, e);
         }
@@ -79,14 +91,14 @@ class WatchableIsEncrypted extends Watchable<boolean | undefined> {
         void this.updateIsEncrypted();
     };
 
-    protected onFirstWatch(): void {
+    protected attachSource(): void {
         this.sdkRoom.on(RoomStateEvent.Events, this.onStateEvent);
         void this.updateIsEncrypted();
     }
 
-    protected onLastWatch(): void {
-        this.sdkRoom.off(RoomStateEvent.Events, this.onStateEvent);
+    protected detachSource(): void {
         // Discard any check still in flight.
         this.checkId++;
+        this.sdkRoom.off(RoomStateEvent.Events, this.onStateEvent);
     }
 }

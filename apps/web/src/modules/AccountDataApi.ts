@@ -5,50 +5,59 @@ SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only OR LicenseRef-Element-Com
 Please see LICENSE files in the repository root for full details.
 */
 
-import { Watchable, type AccountDataApi as IAccountDataApi } from "@element-hq/element-web-module-api";
+import type { Watchable, AccountDataApi as IAccountDataApi } from "@element-hq/element-web-module-api";
 import { ClientEvent, type MatrixEvent, type MatrixClient } from "matrix-js-sdk/src/matrix";
 
-import { MatrixClientPeg } from "../MatrixClientPeg";
+import type { ClientSession } from "./ClientSession";
+import { SessionWatchable } from "./SessionWatchable";
 
 export class AccountDataApi implements IAccountDataApi {
+    public constructor(private readonly session: ClientSession) {}
+
     public get(eventType: string): Watchable<unknown> {
-        const cli = MatrixClientPeg.safeGet();
-        return new AccountDataWatchable(cli, eventType);
+        return new AccountDataWatchable(this.session, this.requireClient(), eventType);
     }
 
     public async set(eventType: string, content: any): Promise<void> {
-        const cli = MatrixClientPeg.safeGet();
+        const cli = this.requireClient();
         //@ts-expect-error: JS-SDK accepts known event-types, intentionally allow arbitrary types.
         await cli.setAccountData(eventType, content);
     }
 
     public async delete(eventType: string): Promise<void> {
-        const cli = MatrixClientPeg.safeGet();
+        const cli = this.requireClient();
         //@ts-expect-error: JS-SDK accepts known event-types, intentionally allow arbitrary types.
         await cli.deleteAccountData(eventType);
     }
+
+    private requireClient(): MatrixClient {
+        const client = this.session.getClient();
+        if (!client) throw new Error("Matrix client session has ended");
+        return client;
+    }
 }
 
-class AccountDataWatchable extends Watchable<unknown> {
+class AccountDataWatchable extends SessionWatchable<unknown> {
     public constructor(
+        session: ClientSession,
         private cli: MatrixClient,
         private eventType: string,
     ) {
         //@ts-expect-error: JS-SDK accepts known event-types, intentionally allow arbitrary types.
-        super(cli.getAccountData(eventType)?.getContent());
+        super(session, cli.getAccountData(eventType)?.getContent(), undefined);
     }
 
     private onAccountData = (event: MatrixEvent): void => {
         if (event.getType() === this.eventType) {
-            this.value = event.getContent();
+            this.publish(event.getContent());
         }
     };
 
-    protected onFirstWatch(): void {
+    protected attachSource(): void {
         this.cli.on(ClientEvent.AccountData, this.onAccountData);
     }
 
-    protected onLastWatch(): void {
+    protected detachSource(): void {
         this.cli.off(ClientEvent.AccountData, this.onAccountData);
     }
 }
