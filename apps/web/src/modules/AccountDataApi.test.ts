@@ -12,12 +12,56 @@ import { ClientEvent } from "matrix-js-sdk/src/matrix";
 import { mkEvent, stubClient } from "test-utils";
 
 import { AccountDataApi } from "./AccountDataApi";
+import { ClientSession } from "./ClientSession";
+import { MatrixDispatcher } from "../dispatcher/dispatcher";
+import { Action } from "../dispatcher/actions";
 
 describe("AccountDataApi", () => {
+    const makeApi = (): AccountDataApi => new AccountDataApi(new ClientSession(new MatrixDispatcher()));
+
     describe("AccountDataWatchable", () => {
+        it("clears its value and detaches from the old client on logout", () => {
+            const cli = stubClient();
+            const dispatcher = new MatrixDispatcher();
+            const session = new ClientSession(dispatcher);
+            const event = mkEvent({
+                content: { private: "old session" },
+                type: "m.test",
+                user: "@a:m.org",
+                event: true,
+            });
+            cli.getAccountData = () => event;
+            const api = new AccountDataApi(session);
+            const watchable = api.get("m.test");
+            const listener = vi.fn();
+            const offSpy = vi.spyOn(cli, "off");
+            watchable.watch(listener);
+
+            dispatcher.dispatch({ action: Action.OnLoggedOut }, true);
+
+            expect(watchable.value).toBeUndefined();
+            expect(listener).toHaveBeenCalledWith(undefined);
+            expect(offSpy).toHaveBeenCalledWith(ClientEvent.AccountData, expect.any(Function));
+
+            cli.emit(ClientEvent.AccountData, event);
+            expect(watchable.value).toBeUndefined();
+            expect(() => api.get("m.test")).toThrow("Matrix client session has ended");
+
+            const newCli = stubClient();
+            const newEvent = mkEvent({
+                content: { private: "new session" },
+                type: "m.test",
+                user: "@b:m.org",
+                event: true,
+            });
+            newCli.getAccountData = () => newEvent;
+            dispatcher.dispatch({ action: Action.OnLoggedIn, client: newCli }, true);
+            expect(api.get("m.test").value).toEqual({ private: "new session" });
+        });
+
         it("should return content of account data event on get()", () => {
             const cli = stubClient();
-            const api = new AccountDataApi();
+            const api = makeApi();
             // Mock cli to return a event
             const content = { foo: "bar" };
             const event = mkEvent({ content, type: "m.test", user: "@foobar:matrix.org", event: true });
@@ -27,7 +71,7 @@ describe("AccountDataApi", () => {
 
         it("should update value on event", () => {
             const cli = stubClient();
-            const api = new AccountDataApi();
+            const api = makeApi();
             // Mock cli to return a event
             const content = { foo: "bar" };
             const event = mkEvent({ content, type: "m.test", user: "@foobar:matrix.org", event: true });
@@ -61,14 +105,14 @@ describe("AccountDataApi", () => {
 
     it("should set account data via js-sdk on set()", async () => {
         const cli = stubClient();
-        const api = new AccountDataApi();
+        const api = makeApi();
         await api.set("m.test", { foo: "bar" });
         expect(cli.setAccountData).toHaveBeenCalledTimes(1);
     });
 
     it("should delete account data via js-sdk on set()", async () => {
         const cli = stubClient();
-        const api = new AccountDataApi();
+        const api = makeApi();
         await api.delete("m.test");
         expect(cli.deleteAccountData).toHaveBeenCalledTimes(1);
     });

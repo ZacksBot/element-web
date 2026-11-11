@@ -11,12 +11,34 @@ import { describe, it, expect, vi } from "vitest";
 import { type MatrixClient } from "matrix-js-sdk/src/matrix";
 
 import { WatchableProfile } from "./Profile";
-import defaultDispatcher from "../dispatcher/dispatcher";
+import { ClientSession } from "./ClientSession";
+import { OwnProfileStore } from "../stores/OwnProfileStore";
+import { UPDATE_EVENT } from "../stores/AsyncStore";
+import defaultDispatcher, { MatrixDispatcher } from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
 
 describe("WatchableProfile", () => {
+    it("clears the old profile on logout even if the profile store updates afterward", () => {
+        const dispatcher = new MatrixDispatcher();
+        const profile = new WatchableProfile(new ClientSession(dispatcher));
+        const listener = vi.fn();
+        profile.watch(listener);
+        const client = {
+            isGuest: () => false,
+            getUserId: () => "@old:server",
+            getDeviceId: () => "OLDDEVICE",
+        } as unknown as MatrixClient;
+        dispatcher.dispatch({ action: Action.OnLoggedIn, client }, true);
+
+        dispatcher.dispatch({ action: Action.OnLoggedOut }, true);
+        OwnProfileStore.instance.emit(UPDATE_EVENT);
+
+        expect(profile.value).toEqual({});
+        expect(listener).toHaveBeenLastCalledWith({});
+    });
+
     it("should update the profile with the new client on login, before the profile is fetched", () => {
-        const profile = new WatchableProfile();
+        const profile = new WatchableProfile(new ClientSession(defaultDispatcher));
         const listener = vi.fn();
         profile.watch(listener);
 
