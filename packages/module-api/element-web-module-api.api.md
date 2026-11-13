@@ -401,7 +401,9 @@ export type PreloadApprover = (widget: WidgetDescriptor) => MaybePromise<boolean
 
 // @public
 export interface Profile {
+    deviceId?: string;
     displayName?: string;
+    homeserverUrl?: string;
     isGuest?: boolean;
     userId?: string;
 }
@@ -423,6 +425,7 @@ export interface RichVariables {
 export interface Room {
     getLastActiveTimestamp: () => number;
     id: string;
+    isEncrypted: Watchable<boolean | undefined>;
     name: Watchable<string>;
 }
 
