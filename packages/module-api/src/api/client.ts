@@ -9,6 +9,40 @@ import type { Room } from "../models/Room";
 import { type Watchable } from "./watchable";
 
 /**
+ * A correlated to-device request sent through the current session.
+ * @alpha
+ */
+export interface ToDeviceRequest {
+    /** Matrix user that should receive the request. */
+    readonly recipientUserId: string;
+    /** Event type used for the outgoing request. */
+    readonly requestType: string;
+    /** Event type expected for the response. */
+    readonly responseType: string;
+    /** Request content. Element adds the correlation and requesting-device fields. */
+    readonly content: Record<string, unknown>;
+    /** Optional timeout in milliseconds. */
+    readonly timeoutMs?: number;
+}
+
+/**
+ * Supported to-device request operations for modules.
+ * @alpha
+ */
+export interface ToDeviceApi {
+    /**
+     * Sends a correlated request from the current Matrix session.
+     *
+     * The returned content is untrusted. The caller must validate its own protocol.
+     * The promise rejects on timeout, send failure, or a detected Matrix account/device change.
+     *
+     * @param request - Recipient, event types, content, and optional timeout for the request.
+     * @returns The untrusted content of the correlated response.
+     */
+    request(request: ToDeviceRequest): Promise<unknown>;
+}
+
+/**
  * Modify account data stored on the homeserver.
  * @public
  */
@@ -32,6 +66,12 @@ export interface AccountDataApi {
  * @public
  */
 export interface ClientApi {
+    /**
+     * Send correlated to-device requests through the current session.
+     * @alpha Subject to change.
+     */
+    readonly toDevice: ToDeviceApi;
+
     /**
      * Allows modules to modify aspects of the way the matrix-js-sdk client is created and configured.
      * @alpha Subject to change.

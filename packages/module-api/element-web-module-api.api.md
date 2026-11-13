@@ -99,6 +99,8 @@ export interface ClientApi {
     // @alpha
     readonly creationManagement: ClientCreationManagementApi;
     getRoom: (id: string) => Room | null;
+    // @alpha
+    readonly toDevice: ToDeviceApi;
     waitForClientStarted(): Promise<void>;
 }
 
@@ -481,6 +483,20 @@ export type SubstitutionValue = number | string | ReactNode | ((sub: string) => 
 
 // @public
 export type Tags = Record<string, SubstitutionValue>;
+
+// @alpha
+export interface ToDeviceApi {
+    request(request: ToDeviceRequest): Promise<unknown>;
+}
+
+// @alpha
+export interface ToDeviceRequest {
+    readonly content: Record<string, unknown>;
+    readonly recipientUserId: string;
+    readonly requestType: string;
+    readonly responseType: string;
+    readonly timeoutMs?: number;
+}
 
 // @public
 export type Translations = Record<string, {
