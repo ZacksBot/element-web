@@ -7,6 +7,7 @@ Please see LICENSE files in the repository root for full details.
 import type { ClientApi as IClientApi, Room } from "@element-hq/element-web-module-api";
 import { Room as ModuleRoom } from "./models/Room";
 import { AccountDataApi } from "./AccountDataApi";
+import { ToDeviceApi } from "./ToDeviceApi";
 import { MatrixClientPeg } from "../MatrixClientPeg";
 import { ClientCreationManagementApi } from "./ClientCreationManagementApi.ts";
 import type { MatrixDispatcher } from "../dispatcher/dispatcher";
@@ -16,6 +17,7 @@ import type { ActionPayload } from "../dispatcher/payloads";
 export class ClientApi implements IClientApi {
     public readonly accountData = new AccountDataApi();
     public readonly creationManagement = new ClientCreationManagementApi();
+    public readonly toDevice = new ToDeviceApi();
 
     // Resolves when the client next starts; replaced on logout so later callers wait for the next start.
     private clientStarted = Promise.withResolvers<void>();
